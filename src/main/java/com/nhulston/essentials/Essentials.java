@@ -5,7 +5,11 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.nhulston.essentials.commands.home.DelHomeCommand;
 import com.nhulston.essentials.commands.home.HomeCommand;
 import com.nhulston.essentials.commands.home.SetHomeCommand;
+import com.nhulston.essentials.commands.warp.DelWarpCommand;
+import com.nhulston.essentials.commands.warp.SetWarpCommand;
+import com.nhulston.essentials.commands.warp.WarpCommand;
 import com.nhulston.essentials.managers.HomeManager;
+import com.nhulston.essentials.managers.WarpManager;
 import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.StorageManager;
 import com.nhulston.essentials.util.Log;
@@ -16,6 +20,7 @@ public class Essentials extends JavaPlugin {
     private ConfigManager configManager;
     private StorageManager storageManager;
     private HomeManager homeManager;
+    private WarpManager warpManager;
 
     public Essentials(@Nonnull JavaPluginInit init) {
         super(init);
@@ -30,6 +35,7 @@ public class Essentials extends JavaPlugin {
         storageManager = new StorageManager(getDataDirectory());
 
         homeManager = new HomeManager(storageManager, configManager);
+        warpManager = new WarpManager(storageManager);
     }
 
     @Override
@@ -50,8 +56,14 @@ public class Essentials extends JavaPlugin {
     }
 
     private void registerCommands() {
+        // Home commands
         getCommandRegistry().registerCommand(new SetHomeCommand(homeManager));
         getCommandRegistry().registerCommand(new HomeCommand(homeManager));
         getCommandRegistry().registerCommand(new DelHomeCommand(homeManager));
+
+        // Warp commands
+        getCommandRegistry().registerCommand(new SetWarpCommand(warpManager));
+        getCommandRegistry().registerCommand(new WarpCommand(warpManager));
+        getCommandRegistry().registerCommand(new DelWarpCommand(warpManager));
     }
 }
