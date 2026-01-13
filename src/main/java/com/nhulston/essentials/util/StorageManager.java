@@ -4,9 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.nhulston.essentials.models.PlayerData;
+import com.nhulston.essentials.models.Spawn;
 import com.nhulston.essentials.models.Warp;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -22,6 +24,7 @@ public class StorageManager {
     private final Gson gson;
     private final ConcurrentHashMap<UUID, PlayerData> cache;
     private final ConcurrentHashMap<String, Warp> warps;
+    private volatile Spawn spawn;
 
     private static final Type WARPS_TYPE = new TypeToken<Map<String, Warp>>(){}.getType();
 
@@ -39,6 +42,7 @@ public class StorageManager {
         }
 
         loadWarps();
+        loadSpawn();
     }
 
     // Player data methods
@@ -143,6 +147,44 @@ public class StorageManager {
         });
     }
 
+    // Spawn methods
+    @Nullable
+    public Spawn getSpawn() {
+        return spawn;
+    }
+
+    public void setSpawn(@Nonnull Spawn spawn) {
+        this.spawn = spawn;
+        saveSpawnAsync();
+    }
+
+    private void loadSpawn() {
+        Path file = dataFolder.resolve("spawn.json");
+        if (Files.exists(file)) {
+            try {
+                String json = Files.readString(file);
+                Spawn loaded = gson.fromJson(json, Spawn.class);
+                if (loaded != null) {
+                    this.spawn = loaded;
+                }
+            } catch (IOException e) {
+                Log.warning("Failed to load spawn: " + e.getMessage());
+            }
+        }
+    }
+
+    private void saveSpawnAsync() {
+        CompletableFuture.runAsync(() -> {
+            Path file = dataFolder.resolve("spawn.json");
+            try {
+                String json = gson.toJson(spawn);
+                Files.writeString(file, json);
+            } catch (IOException e) {
+                Log.error("Failed to save spawn: " + e.getMessage());
+            }
+        });
+    }
+
     public void shutdown() {
         // Save player data
         for (Map.Entry<UUID, PlayerData> entry : cache.entrySet()) {
@@ -163,6 +205,17 @@ public class StorageManager {
             Files.writeString(warpsFile, json);
         } catch (IOException e) {
             Log.error("Failed to save warps on shutdown: " + e.getMessage());
+        }
+
+        // Save spawn
+        if (spawn != null) {
+            Path spawnFile = dataFolder.resolve("spawn.json");
+            try {
+                String json = gson.toJson(spawn);
+                Files.writeString(spawnFile, json);
+            } catch (IOException e) {
+                Log.error("Failed to save spawn on shutdown: " + e.getMessage());
+            }
         }
     }
 }

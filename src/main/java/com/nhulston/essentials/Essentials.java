@@ -5,10 +5,13 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.nhulston.essentials.commands.home.DelHomeCommand;
 import com.nhulston.essentials.commands.home.HomeCommand;
 import com.nhulston.essentials.commands.home.SetHomeCommand;
+import com.nhulston.essentials.commands.spawn.SetSpawnCommand;
+import com.nhulston.essentials.commands.spawn.SpawnCommand;
 import com.nhulston.essentials.commands.warp.DelWarpCommand;
 import com.nhulston.essentials.commands.warp.SetWarpCommand;
 import com.nhulston.essentials.commands.warp.WarpCommand;
 import com.nhulston.essentials.managers.HomeManager;
+import com.nhulston.essentials.managers.SpawnManager;
 import com.nhulston.essentials.managers.WarpManager;
 import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.StorageManager;
@@ -21,6 +24,7 @@ public class Essentials extends JavaPlugin {
     private StorageManager storageManager;
     private HomeManager homeManager;
     private WarpManager warpManager;
+    private SpawnManager spawnManager;
 
     public Essentials(@Nonnull JavaPluginInit init) {
         super(init);
@@ -36,6 +40,7 @@ public class Essentials extends JavaPlugin {
 
         homeManager = new HomeManager(storageManager, configManager);
         warpManager = new WarpManager(storageManager);
+        spawnManager = new SpawnManager(storageManager);
     }
 
     @Override
@@ -65,5 +70,9 @@ public class Essentials extends JavaPlugin {
         getCommandRegistry().registerCommand(new SetWarpCommand(warpManager));
         getCommandRegistry().registerCommand(new WarpCommand(warpManager));
         getCommandRegistry().registerCommand(new DelWarpCommand(warpManager));
+
+        // Spawn commands
+        getCommandRegistry().registerCommand(new SetSpawnCommand(spawnManager));
+        getCommandRegistry().registerCommand(new SpawnCommand(spawnManager));
     }
 }
