@@ -37,9 +37,6 @@ public class PlayerQuitEvent {
     public void register(@Nonnull EventRegistry eventRegistry) {
         eventRegistry.registerGlobal(PlayerDisconnectEvent.class, event -> {
             UUID playerUuid = event.getPlayerRef().getUuid();
-            String playerName = event.getPlayerRef().getUsername();
-            
-            Log.info("Cleaning up data for disconnected player: " + playerName);
 
             // Save and clean up player data
             storageManager.savePlayerData(playerUuid);
