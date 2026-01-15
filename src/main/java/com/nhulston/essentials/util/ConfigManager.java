@@ -81,6 +81,9 @@ public class ConfigManager {
     private boolean sleepEnabled = true;
     private int sleepPercentage = 20;
 
+    // Shout settings
+    private String shoutPrefix = "&0[&7Broadcast&0] &f";
+
     public ConfigManager(@Nonnull Path dataFolder) {
         this.configPath = dataFolder.resolve("config.toml");
         load();
@@ -173,6 +176,9 @@ public class ConfigManager {
             // Sleep config
             sleepEnabled = config.getBoolean("sleep.enabled", () -> true);
             sleepPercentage = getIntSafe(config, "sleep.percentage", 20);
+
+            // Shout config
+            shoutPrefix = config.getString("shout.prefix", () -> "&0[&7Broadcast&0] &f");
 
             Log.info("Config loaded!");
         } catch (Exception e) {
@@ -493,5 +499,10 @@ public class ConfigManager {
 
     public int getSleepPercentage() {
         return sleepPercentage;
+    }
+
+    @Nonnull
+    public String getShoutPrefix() {
+        return shoutPrefix;
     }
 }

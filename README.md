@@ -51,6 +51,7 @@ Essentials is an all-in-one utility plugin for Hytale server administrators.
 | <code>/tphere</code>            | Teleport a player to you         | <code>essentials.tphere</code>     |
 | <code>/top</code>               | Teleport to highest block        | <code>essentials.top</code>        |
 | <code>/essentials reload</code> | Reload configuration             | <code>essentials.reload</code>     |
+| <code>/shout</code>             | Broadcast message to all players | <code>essentials.shout</code>      |
 
 # Permissions
 
@@ -93,6 +94,7 @@ If you have a permissions mod, follow the instructions for that mod.
 | <code>essentials.top</code>                 | Teleport to highest block                                                                   |
 | <code>essentials.reload</code>              | Reload configuration files                                                                  |
 | <code>essentials.chat.color</code>          | Use color codes in chat messages                                                            |
+| <code>essentials.shout</code>               | Broadcast messages to all players (aliases: /broadcast)                                     |
 
 # Configuration
 

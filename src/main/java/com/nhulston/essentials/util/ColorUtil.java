@@ -52,7 +52,7 @@ public final class ColorUtil {
             String code = colorMatcher.group(1).toLowerCase();
             int index = Character.digit(code.charAt(0), 16);
             String hex = COLOR_MAP[index];
-            colorMatcher.appendReplacement(sb, "&#" + hex.substring(1));
+            colorMatcher.appendReplacement(sb, Matcher.quoteReplacement("&#" + hex.substring(1)));
         }
         colorMatcher.appendTail(sb);
         normalized = sb.toString();

@@ -16,6 +16,7 @@ import com.nhulston.essentials.commands.list.ListCommand;
 import com.nhulston.essentials.commands.msg.MsgCommand;
 import com.nhulston.essentials.commands.msg.ReplyCommand;
 import com.nhulston.essentials.commands.rtp.RtpCommand;
+import com.nhulston.essentials.commands.shout.ShoutCommand;
 import com.nhulston.essentials.commands.top.TopCommand;
 import com.nhulston.essentials.commands.tphere.TphereCommand;
 import com.nhulston.essentials.commands.spawn.SetSpawnCommand;
@@ -179,6 +180,9 @@ public class Essentials extends JavaPlugin {
 
         // Essentials info command
         getCommandRegistry().registerCommand(new EssentialsCommand());
+
+        // Shout/broadcast command
+        getCommandRegistry().registerCommand(new ShoutCommand(configManager));
     }
 
     private void registerEvents() {
