@@ -92,6 +92,7 @@ If you have a permissions mod, follow the instructions for that mod.
 | <code>essentials.tphere</code>              | Teleport players to you                                                                     |
 | <code>essentials.top</code>                 | Teleport to highest block                                                                   |
 | <code>essentials.reload</code>              | Reload configuration files                                                                  |
+| <code>essentials.chat.color</code>          | Use color codes in chat messages                                                            |
 
 # Configuration
 

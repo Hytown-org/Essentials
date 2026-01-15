@@ -11,8 +11,12 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public class ChatManager {
+    private static final String COLOR_PERMISSION = "essentials.chat.color";
+    private static final Pattern COLOR_CODE_PATTERN = Pattern.compile("&[0-9a-fA-F]|&#[0-9a-fA-F]{6}");
+
     private final ConfigManager configManager;
 
     public ChatManager(@Nonnull ConfigManager configManager) {
@@ -33,11 +37,26 @@ public class ChatManager {
     @Nonnull
     public Message formatMessage(@Nonnull PlayerRef sender, @Nonnull String content) {
         String format = getFormatForPlayer(sender.getUuid());
+
+        // Strip color codes from message unless player has permission
+        String sanitizedContent = content;
+        if (!PermissionsModule.get().hasPermission(sender.getUuid(), COLOR_PERMISSION)) {
+            sanitizedContent = stripColorCodes(content);
+        }
+
         String formatted = format
                 .replace("%player%", sender.getUsername())
-                .replace("%message%", content);
+                .replace("%message%", sanitizedContent);
 
         return ColorUtil.colorize(formatted);
+    }
+
+    /**
+     * Strips color codes (&0-&f and &#RRGGBB) from a string.
+     */
+    @Nonnull
+    private String stripColorCodes(@Nonnull String text) {
+        return COLOR_CODE_PATTERN.matcher(text).replaceAll("");
     }
 
     /**
