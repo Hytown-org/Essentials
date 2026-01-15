@@ -29,7 +29,57 @@ public final class TeleportUtil {
     /** Player height in blocks (need 2 air blocks for player to fit) */
     private static final int PLAYER_HEIGHT = 2;
 
+    // Cardinal direction yaw values
+    private static final float YAW_NORTH = 0f;
+    private static final float YAW_EAST = -90f;
+    private static final float YAW_SOUTH = 180f;
+    private static final float YAW_WEST = 90f;
+
     private TeleportUtil() {}
+
+    /**
+     * Rounds the yaw to the nearest cardinal direction.
+     * Workaround for Hytale bug where teleporting while looking down causes player model issues.
+     * 
+     * Cardinal directions:
+     * - North: 0
+     * - East: -90
+     * - South: 180 (or -180)
+     * - West: 90
+     *
+     * @param yaw The current yaw value
+     * @return The yaw rounded to the nearest cardinal direction
+     */
+    public static float roundToCardinalYaw(float yaw) {
+        // Normalize yaw to -180 to 180 range
+        yaw = yaw % 360;
+        if (yaw > 180) yaw -= 360;
+        if (yaw < -180) yaw += 360;
+
+        // Find nearest cardinal direction
+        // North: 0, East: -90, South: 180/-180, West: 90
+        if (yaw >= -45 && yaw < 45) {
+            return YAW_NORTH; // 0
+        } else if (yaw >= 45 && yaw < 135) {
+            return YAW_WEST; // 90
+        } else if (yaw >= 135 || yaw < -135) {
+            return YAW_SOUTH; // 180
+        } else {
+            return YAW_EAST; // -90
+        }
+    }
+
+    /**
+     * Creates a cardinal-safe rotation vector (pitch set to 0, yaw rounded to cardinal).
+     * Use this to avoid the Hytale bug where looking down causes player model issues.
+     *
+     * @param currentRotation The player's current rotation
+     * @return A new rotation with pitch=0 and yaw rounded to cardinal direction
+     */
+    private static Vector3f cardinalRotation(@Nonnull Vector3f currentRotation) {
+        float cardinalYaw = roundToCardinalYaw(currentRotation.y);
+        return new Vector3f(0, cardinalYaw, 0);
+    }
 
     /**
      * Teleports an entity to the specified location.
@@ -46,7 +96,8 @@ public final class TeleportUtil {
         }
 
         Vector3d position = new Vector3d(x, y, z);
-        Vector3f rotation = new Vector3f(pitch, yaw, 0.0F);
+        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
+        Vector3f rotation = new Vector3f(0, roundToCardinalYaw(yaw), 0);
 
         Teleport teleport = new Teleport(targetWorld, position, rotation);
         store.putComponent(ref, Teleport.getComponentType(), teleport);
@@ -72,7 +123,8 @@ public final class TeleportUtil {
         double safeY = findSafeY(targetWorld, x, y, z);
         
         Vector3d position = new Vector3d(x, safeY, z);
-        Vector3f rotation = new Vector3f(pitch, yaw, 0.0F);
+        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
+        Vector3f rotation = new Vector3f(0, roundToCardinalYaw(yaw), 0);
 
         Teleport teleport = new Teleport(targetWorld, position, rotation);
         store.putComponent(ref, Teleport.getComponentType(), teleport);
@@ -113,8 +165,11 @@ public final class TeleportUtil {
         EntityStore targetEntityStore = targetStore.getExternalData();
         World targetWorld = targetEntityStore.getWorld();
         
+        // Get target's rotation and round to cardinal direction
+        Vector3f rotation = cardinalRotation(targetTransform.getRotation());
+
         // Teleport the player
-        Teleport teleport = new Teleport(targetWorld, targetPos, new Vector3f(0, 0, 0));
+        Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
         playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
     }
 
@@ -140,7 +195,8 @@ public final class TeleportUtil {
 
         Store<EntityStore> store = playerRef.getStore();
         Vector3d position = new Vector3d(spawn.getX(), safeY, spawn.getZ());
-        Vector3f rotation = new Vector3f(spawn.getPitch(), spawn.getYaw(), 0.0F);
+        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
+        Vector3f rotation = new Vector3f(0, roundToCardinalYaw(spawn.getYaw()), 0);
 
         Teleport teleport = new Teleport(targetWorld, position, rotation);
         store.putComponent(playerRef, Teleport.getComponentType(), teleport);
@@ -166,7 +222,8 @@ public final class TeleportUtil {
         // Use spawn coordinates directly - no safe Y check as it can trigger chunk loading
         // during store processing which causes IllegalStateException
         Vector3d position = new Vector3d(spawn.getX(), spawn.getY(), spawn.getZ());
-        Vector3f rotation = new Vector3f(spawn.getPitch(), spawn.getYaw(), 0.0F);
+        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
+        Vector3f rotation = new Vector3f(0, roundToCardinalYaw(spawn.getYaw()), 0);
 
         Teleport teleport = new Teleport(targetWorld, position, rotation);
         buffer.putComponent(ref, Teleport.getComponentType(), teleport);
@@ -208,8 +265,11 @@ public final class TeleportUtil {
         EntityStore targetEntityStore = targetStore.getExternalData();
         World targetWorld = targetEntityStore.getWorld();
 
+        // Get target's rotation and round to cardinal direction
+        Vector3f rotation = cardinalRotation(targetTransform.getRotation());
+
         // Teleport the player
-        Teleport teleport = new Teleport(targetWorld, targetPos, new Vector3f(0, 0, 0));
+        Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
         store.putComponent(playerRef, Teleport.getComponentType(), teleport);
 
         return null;
