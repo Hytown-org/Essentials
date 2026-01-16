@@ -40,6 +40,17 @@ public class TeleportManager {
                               @Nonnull Store<EntityStore> store, @Nonnull Vector3d startPosition,
                               @Nonnull String worldName, double x, double y, double z,
                               float yaw, float pitch, @Nullable String successMessage) {
+        queueTeleport(playerRef, entityRef, store, startPosition, worldName, x, y, z, yaw, pitch, successMessage, null);
+    }
+
+    /**
+     * Queues a coordinate-based teleport with an optional success callback.
+     */
+    public void queueTeleport(@Nonnull PlayerRef playerRef, @Nonnull Ref<EntityStore> entityRef,
+                              @Nonnull Store<EntityStore> store, @Nonnull Vector3d startPosition,
+                              @Nonnull String worldName, double x, double y, double z,
+                              float yaw, float pitch, @Nullable String successMessage,
+                              @Nullable Runnable onSuccess) {
         UUID playerUuid = playerRef.getUuid();
         int delay = configManager.getTeleportDelay();
 
@@ -49,8 +60,13 @@ public class TeleportManager {
             String error = TeleportUtil.teleportSafe(store, entityRef, worldName, x, y, z, yaw, pitch);
             if (error != null) {
                 Msg.fail(playerRef, error);
-            } else if (successMessage != null) {
-                Msg.success(playerRef, successMessage);
+            } else {
+                if (successMessage != null) {
+                    Msg.success(playerRef, successMessage);
+                }
+                if (onSuccess != null) {
+                    onSuccess.run();
+                }
             }
             return;
         }
@@ -63,7 +79,7 @@ public class TeleportManager {
 
         // Create pending teleport
         TeleportDestination destination = new TeleportDestination(worldName, x, y, z, yaw, pitch);
-        PendingTeleport pending = new PendingTeleport(playerRef, startPosition, destination, successMessage, delay);
+        PendingTeleport pending = new PendingTeleport(playerRef, startPosition, destination, successMessage, delay, onSuccess);
         pendingTeleports.put(playerUuid, pending);
 
         Msg.info(playerRef, "Teleporting in " + delay + " seconds. Don't move!");
@@ -160,8 +176,13 @@ public class TeleportManager {
 
                 if (error != null) {
                     Msg.fail(pending.getPlayerRef(), error);
-                } else if (pending.getSuccessMessage() != null) {
-                    Msg.success(pending.getPlayerRef(), pending.getSuccessMessage());
+                } else {
+                    if (pending.getSuccessMessage() != null) {
+                        Msg.success(pending.getPlayerRef(), pending.getSuccessMessage());
+                    }
+                    if (pending.getOnSuccess() != null) {
+                        pending.getOnSuccess().run();
+                    }
                 }
             } catch (Exception e) {
                 Log.error("Failed to execute teleport for " + playerUuid + ": " + e.getMessage());
@@ -229,18 +250,21 @@ public class TeleportManager {
         private final UUID targetPlayerUuid;           // For player teleports
         private final String targetPlayerName;         // For player teleports
         private final String successMessage;
+        private final Runnable onSuccess;
         private final float delaySeconds;
         private float elapsedTime;
 
         // Constructor for coordinate teleport
         PendingTeleport(@Nonnull PlayerRef playerRef, @Nonnull Vector3d startPosition,
-                        @Nonnull TeleportDestination destination, @Nullable String successMessage, int delaySeconds) {
+                        @Nonnull TeleportDestination destination, @Nullable String successMessage, 
+                        int delaySeconds, @Nullable Runnable onSuccess) {
             this.playerRef = playerRef;
             this.startPosition = startPosition.clone(); // Clone to prevent mutation
             this.destination = destination;
             this.targetPlayerUuid = null;
             this.targetPlayerName = null;
             this.successMessage = successMessage;
+            this.onSuccess = onSuccess;
             this.delaySeconds = delaySeconds;
             this.elapsedTime = 0f;
         }
@@ -255,6 +279,7 @@ public class TeleportManager {
             this.targetPlayerUuid = targetPlayerUuid;
             this.targetPlayerName = targetPlayerName;
             this.successMessage = successMessage;
+            this.onSuccess = null;
             this.delaySeconds = delaySeconds;
             this.elapsedTime = 0f;
         }
@@ -281,6 +306,10 @@ public class TeleportManager {
 
         String getSuccessMessage() {
             return successMessage;
+        }
+
+        Runnable getOnSuccess() {
+            return onSuccess;
         }
 
         void addElapsedTime(float deltaTime) {

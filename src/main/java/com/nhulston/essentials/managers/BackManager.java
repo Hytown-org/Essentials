@@ -21,12 +21,19 @@ public class BackManager {
     }
 
     /**
-     * Gets and clears a player's death location.
+     * Gets a player's death location without clearing it.
      * Returns null if no death location is stored.
      */
     @Nullable
-    public DeathLocation getAndClearDeathLocation(@Nonnull UUID playerUuid) {
-        return deathLocations.remove(playerUuid);
+    public DeathLocation getDeathLocation(@Nonnull UUID playerUuid) {
+        return deathLocations.get(playerUuid);
+    }
+
+    /**
+     * Clears a player's death location.
+     */
+    public void clearDeathLocation(@Nonnull UUID playerUuid) {
+        deathLocations.remove(playerUuid);
     }
 
     /**

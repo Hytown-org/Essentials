@@ -33,7 +33,8 @@ public class BackCommand extends AbstractPlayerCommand {
     @Override
     protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
                            @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
-        BackManager.DeathLocation deathLocation = backManager.getAndClearDeathLocation(playerRef.getUuid());
+        java.util.UUID playerUuid = playerRef.getUuid();
+        BackManager.DeathLocation deathLocation = backManager.getDeathLocation(playerUuid);
 
         if (deathLocation == null) {
             Msg.fail(context, "You have no death location to return to.");
@@ -50,7 +51,8 @@ public class BackCommand extends AbstractPlayerCommand {
             deathLocation.getZ(),
             deathLocation.getYaw(),
             deathLocation.getPitch(),
-            "Teleported to your last death location."
+            "Teleported to your last death location.",
+            () -> backManager.clearDeathLocation(playerUuid)
         );
     }
 }

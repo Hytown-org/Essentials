@@ -86,17 +86,18 @@ public class RtpCommand extends AbstractPlayerCommand {
             Double safeY = TeleportUtil.findSafeRtpY(rtpWorld, x, z);
             
             if (safeY != null) {
-                // Found a safe location - set cooldown
-                data.setLastRtpTime(System.currentTimeMillis());
-                storageManager.savePlayerData(playerUuid);
-
                 Vector3d startPosition = playerRef.getTransform().getPosition();
 
                 teleportManager.queueTeleport(
                     playerRef, ref, store, startPosition,
                     rtpWorldName, x, safeY, z,
                     0.0f, 0.0f, // yaw, pitch - face forward
-                    "Randomly teleported!"
+                    "Randomly teleported!",
+                    () -> {
+                        // Set cooldown only on successful teleport
+                        data.setLastRtpTime(System.currentTimeMillis());
+                        storageManager.savePlayerData(playerUuid);
+                    }
                 );
                 return;
             }
