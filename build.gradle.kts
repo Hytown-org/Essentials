@@ -65,9 +65,6 @@ tasks {
 
         // Merge service files properly
         mergeServiceFiles()
-        
-        // Minimize JAR size (removes unused classes)
-        minimize()
     }
 
     // Configure tests
