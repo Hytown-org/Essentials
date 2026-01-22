@@ -79,6 +79,9 @@ public class HomeManager {
 
         int maxHomes = getMaxHomes(playerUuid);
         if (data.getHome(lowerName) == null && data.getHomeCount() >= maxHomes) {
+            if (maxHomes == 0) {
+                return "You don't have permission to set homes.";
+            }
             return "You have reached the maximum of " + maxHomes + " homes.";
         }
 
