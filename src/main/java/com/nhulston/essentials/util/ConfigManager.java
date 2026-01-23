@@ -82,6 +82,9 @@ public class ConfigManager {
     private volatile String firstJoinMessage = "&e%player% &6joined the game for the first time!";
     private volatile boolean leaveMessageEnabled = true;
     private volatile String leaveMessage = "&e%player% &cleft the game";
+    
+    // Rules settings
+    private volatile String rulesMessage = "&6=== Server Rules ===\n&e1. &fBe respectful to all players\n&e2. &fNo griefing or stealing\n&e3. &fNo hacking or cheating\n&e4. &fHave fun!";
 
     public ConfigManager(@Nonnull Path dataFolder) {
         this.configPath = dataFolder.resolve("config.toml");
@@ -196,6 +199,9 @@ public class ConfigManager {
             firstJoinMessage = config.getString("join-leave-messages.first-join-message", () -> "&e%player% &6joined the game for the first time!");
             leaveMessageEnabled = config.getBoolean("join-leave-messages.leave-enabled", () -> true);
             leaveMessage = config.getString("join-leave-messages.leave-message", () -> "&8[&c-&8] &7%player%");
+            
+            // Rules config
+            rulesMessage = config.getString("rules.message", () -> "&6=== Server Rules ===\n&e1. &fBe respectful to all players\n&e2. &fNo griefing or stealing\n&e3. &fNo hacking or cheating\n&e4. &fHave fun!");
 
             Log.info("Config loaded!");
         } catch (Exception e) {
@@ -382,5 +388,10 @@ public class ConfigManager {
     @Nonnull
     public String getLeaveMessage() {
         return leaveMessage;
+    }
+    
+    @Nonnull
+    public String getRulesMessage() {
+        return rulesMessage;
     }
 }

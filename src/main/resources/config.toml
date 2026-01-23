@@ -142,6 +142,19 @@ prefix = "&0[&7Broadcast&0] &f"
 # Default: 43200 (12 hours)
 cooldown = 43200
 
+[rules]
+# Server rules displayed with /rules command
+# Placeholders: %player% = player name
+# Color codes: &0-&9, &a-&f (hex colors like &#FF5555 also supported)
+# Use triple quotes for multi-line messages
+message = """
+&6=== Server Rules ===
+&e1. &fBe respectful to all players
+&e2. &fNo griefing or stealing
+&e3. &fNo hacking or cheating
+&e4. &fHave fun!
+"""
+
 [join-leave-messages]
 # Broadcast messages when players join or leave the server
 # You can make any text have multiple lines by doing something like this:

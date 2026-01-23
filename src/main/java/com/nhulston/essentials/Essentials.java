@@ -17,6 +17,7 @@ import com.nhulston.essentials.commands.msg.MsgCommand;
 import com.nhulston.essentials.commands.msg.ReplyCommand;
 import com.nhulston.essentials.commands.repair.RepairCommand;
 import com.nhulston.essentials.commands.rtp.RtpCommand;
+import com.nhulston.essentials.commands.rules.RulesCommand;
 import com.nhulston.essentials.commands.shout.ShoutCommand;
 import com.nhulston.essentials.commands.top.TopCommand;
 import com.nhulston.essentials.commands.tphere.TphereCommand;
@@ -191,6 +192,9 @@ public class Essentials extends JavaPlugin {
 
         // Repair command
         getCommandRegistry().registerCommand(new RepairCommand(configManager, storageManager));
+        
+        // Rules command
+        getCommandRegistry().registerCommand(new RulesCommand(configManager));
     }
 
     private void registerEvents() {
