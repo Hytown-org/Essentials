@@ -139,28 +139,25 @@ public class WarpCommand extends AbstractPlayerCommand {
             }
 
             PlayerRef targetPlayer = context.get(targetArg);
-            if (targetPlayer == null) {
-                Msg.send(context, messages.get("commands.spawn.player-not-found"));
-                return CompletableFuture.completedFuture(null);
-            }
 
-            // Save location and teleport instantly using utility method
-            String error = TeleportUtil.saveLocationAndTeleport(
-                targetPlayer, backManager,
-                warp.getWorld(), warp.getX(), warp.getY(), warp.getZ(), warp.getYaw(), warp.getPitch()
-            );
+            // Execute teleport on player's world thread with validation
+            TeleportUtil.executeOnPlayerWorld(targetPlayer, context, () -> {
+                String error = TeleportUtil.saveLocationAndTeleport(
+                    targetPlayer, backManager,
+                    warp.getWorld(), warp.getX(), warp.getY(), warp.getZ(), warp.getYaw(), warp.getPitch()
+                );
 
-            if (error != null) {
-                Msg.send(context, error);
-                return CompletableFuture.completedFuture(null);
-            }
+                if (error != null) {
+                    Msg.send(context, error);
+                    return;
+                }
 
-            // Send messages
-            String senderName = "Console"; // Console always for this variant since AbstractCommand
-            Msg.send(context, messages.get("commands.warp.teleported-other", 
-                Map.of("player", targetPlayer.getUsername(), "warp", warpName)));
-            Msg.send(targetPlayer, messages.get("commands.warp.teleported-by", 
-                Map.of("sender", senderName, "warp", warpName)));
+                String senderName = "Console";
+                Msg.send(context, messages.get("commands.warp.teleported-other", 
+                    Map.of("player", targetPlayer.getUsername(), "warp", warpName)));
+                Msg.send(targetPlayer, messages.get("commands.warp.teleported-by", 
+                    Map.of("sender", senderName, "warp", warpName)));
+            });
 
             return CompletableFuture.completedFuture(null);
         }

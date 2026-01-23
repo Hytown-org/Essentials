@@ -38,12 +38,124 @@ public final class TeleportUtil {
     private static final float YAW_SOUTH = (float) Math.PI;              // π
     private static final float YAW_WEST = (float) Math.toRadians(90);   // π/2
 
-    private TeleportUtil() {}
+    /**
+     * Helper to perform cross-world teleports with proper thread safety.
+     * Handles same-world and cross-world cases automatically.
+     * 
+     * @param playerStore The player's store
+     * @param playerRef The player's entity reference
+     * @param playerWorld The player's current world
+     * @param targetStore The target entity's store
+     * @param targetRef The target entity's reference
+     * @param targetWorld The target entity's world
+     * @param onSuccess Callback on success (optional)
+     * @param onError Callback on error (optional)
+     */
+    private static void executeCrossWorldTeleportToEntity(
+            @Nonnull Store<EntityStore> playerStore,
+            @Nonnull Ref<EntityStore> playerRef,
+            @Nonnull World playerWorld,
+            @Nonnull Store<EntityStore> targetStore,
+            @Nonnull Ref<EntityStore> targetRef,
+            @Nonnull World targetWorld,
+            @Nullable Runnable onSuccess,
+            @Nullable java.util.function.Consumer<String> onError) {
+        
+        if (targetWorld == playerWorld) {
+            // Same world - safe to access directly
+            TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
+            if (targetTransform == null) {
+                if (onError != null) {
+                    onError.accept("Could not get target position.");
+                }
+                return;
+            }
+            
+            Vector3d targetPos = targetTransform.getPosition();
+            Vector3f rotation = new Vector3f(0, roundToCardinalYaw(targetTransform.getRotation().y), 0);
+            
+            Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
+            playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
+            
+            if (onSuccess != null) {
+                onSuccess.run();
+            }
+        } else {
+            // Cross-world teleport - read target position on target world's thread
+            targetWorld.execute(() -> {
+                if (!targetRef.isValid()) {
+                    if (onError != null) {
+                        onError.accept("Target is not available.");
+                    }
+                    return;
+                }
+                
+                TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
+                if (targetTransform == null) {
+                    if (onError != null) {
+                        onError.accept("Could not get target position.");
+                    }
+                    return;
+                }
+                
+                // Capture position data (clone to prevent mutation)
+                Vector3d targetPos = targetTransform.getPosition().clone();
+                Vector3f rotation = new Vector3f(0, roundToCardinalYaw(targetTransform.getRotation().y), 0);
+                
+                // Execute teleport on player's world thread
+                playerWorld.execute(() -> {
+                    if (!playerRef.isValid()) {
+                        if (onError != null) {
+                            onError.accept("Player is not available.");
+                        }
+                        return;
+                    }
+                    
+                    Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
+                    playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
+                    
+                    if (onSuccess != null) {
+                        onSuccess.run();
+                    }
+                });
+            });
+        }
+    }
+
+    /**
+     * Executes a teleport action on a player's world thread with full validation.
+     * Handles player lookup, world thread bridging, and error messaging automatically.
+     * If validation fails, sends an error message to the command context and returns without executing.
+     * 
+     * @param targetPlayer The player to teleport (can be null)
+     * @param context Command context for sending error messages
+     * @param action The action to execute on the player's world thread
+     */
+    public static void executeOnPlayerWorld(@Nullable PlayerRef targetPlayer,
+                                             @Nonnull com.hypixel.hytale.server.core.command.system.CommandContext context,
+                                             @Nonnull Runnable action) {
+        if (targetPlayer == null) {
+            Msg.send(context, Essentials.getInstance().getMessageManager().get("commands.spawn.player-not-found"));
+            return;
+        }
+
+        Ref<EntityStore> ref = targetPlayer.getReference();
+        if (ref == null || !ref.isValid()) {
+            Msg.send(context, Essentials.getInstance().getMessageManager().get("commands.spawn.player-not-found"));
+            return;
+        }
+
+        Store<EntityStore> store = ref.getStore();
+        EntityStore entityStore = store.getExternalData();
+        World targetWorld = entityStore.getWorld();
+
+        // Execute on target player's world thread
+        targetWorld.execute(action);
+    }
 
     /**
      * Rounds the yaw to the nearest cardinal direction.
      * Workaround for Hytale bug where teleporting while looking down causes player model issues.
-     * 
      * Hytale uses radians for rotation. Cardinal directions in radians:
      * - North: 0
      * - East: -π/2 (-1.5708)
@@ -75,42 +187,7 @@ public final class TeleportUtil {
         }
     }
 
-    /**
-     * Creates a cardinal-safe rotation vector (pitch set to 0, yaw rounded to cardinal).
-     * Use this to avoid the Hytale bug where looking down causes player model issues.
-     *
-     * @param currentRotation The player's current rotation
-     * @return A new rotation with pitch=0 and yaw rounded to cardinal direction
-     */
-    private static Vector3f cardinalRotation(@Nonnull Vector3f currentRotation) {
-        float cardinalYaw = roundToCardinalYaw(currentRotation.y);
-        return new Vector3f(0, cardinalYaw, 0);
-    }
 
-    /**
-     * Teleports an entity to the specified location.
-     * Does NOT adjust position for safety - use teleportSafe() for player-set destinations.
-     * @return null if successful, error message if failed
-     */
-    @Nullable
-    public static String teleport(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref,
-                                  @Nonnull String worldName, double x, double y, double z,
-                                  float yaw, float pitch) {
-        World targetWorld = Universe.get().getWorld(worldName);
-        if (targetWorld == null) {
-            MessageManager messages = Essentials.getInstance().getMessageManager();
-            return messages.get("teleport.world-not-loaded", Map.of("world", worldName));
-        }
-
-        Vector3d position = new Vector3d(x, y, z);
-        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
-        Vector3f rotation = new Vector3f(0, roundToCardinalYaw(yaw), 0);
-
-        Teleport teleport = new Teleport(targetWorld, position, rotation);
-        store.putComponent(ref, Teleport.getComponentType(), teleport);
-
-        return null;
-    }
 
     /**
      * Teleports an entity to the specified location, finding a safe Y position if needed.
@@ -126,17 +203,13 @@ public final class TeleportUtil {
             MessageManager messages = Essentials.getInstance().getMessageManager();
             return messages.get("teleport.world-not-loaded", Map.of("world", worldName));
         }
-
-        // Find safe Y position
         double safeY = findSafeY(targetWorld, x, y, z);
         
         Vector3d position = new Vector3d(x, safeY, z);
-        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
         Vector3f rotation = new Vector3f(0, roundToCardinalYaw(yaw), 0);
 
         Teleport teleport = new Teleport(targetWorld, position, rotation);
         store.putComponent(ref, Teleport.getComponentType(), teleport);
-
         return null;
     }
 
@@ -170,75 +243,9 @@ public final class TeleportUtil {
         EntityStore playerEntityStore = playerStore.getExternalData();
         World playerWorld = playerEntityStore.getWorld();
         
-        // Check if same world - if so, simple case
-        if (targetWorld == playerWorld) {
-            // Same world - safe to access directly
-            TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
-            if (targetTransform == null) {
-                return;
-            }
-            
-            Vector3d targetPos = targetTransform.getPosition();
-            Vector3f rotation = cardinalRotation(targetTransform.getRotation());
-            
-            Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
-            playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
-        } else {
-            // Cross-world teleport - need to read target position on target world's thread
-            targetWorld.execute(() -> {
-                if (!targetRef.isValid()) {
-                    return;
-                }
-                
-                TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
-                if (targetTransform == null) {
-                    return;
-                }
-                
-                // Capture position data (clone to prevent mutation)
-                Vector3d targetPos = targetTransform.getPosition().clone();
-                Vector3f rotation = cardinalRotation(targetTransform.getRotation());
-                
-                // Now execute teleport on player's world thread
-                playerWorld.execute(() -> {
-                    if (!playerRef.isValid()) {
-                        return;
-                    }
-                    
-                    Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
-                    playerStore.putComponent(playerRef, Teleport.getComponentType(), teleport);
-                });
-            });
-        }
-    }
-
-    /**
-     * Teleports a player to spawn, finding a safe Y position if needed.
-     *
-     * @param player The player to teleport
-     * @param spawn  The spawn location
-     */
-    public static void teleportToSpawn(@Nonnull PlayerRef player, @Nonnull Spawn spawn) {
-        Ref<EntityStore> playerRef = player.getReference();
-        if (playerRef == null || !playerRef.isValid()) {
-            return;
-        }
-
-        World targetWorld = Universe.get().getWorld(spawn.getWorld());
-        if (targetWorld == null) {
-            return;
-        }
-
-        // Find safe Y position
-        double safeY = findSafeY(targetWorld, spawn.getX(), spawn.getY(), spawn.getZ());
-
-        Store<EntityStore> store = playerRef.getStore();
-        Vector3d position = new Vector3d(spawn.getX(), safeY, spawn.getZ());
-        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
-        Vector3f rotation = new Vector3f(0, roundToCardinalYaw(spawn.getYaw()), 0);
-
-        Teleport teleport = new Teleport(targetWorld, position, rotation);
-        store.putComponent(playerRef, Teleport.getComponentType(), teleport);
+        executeCrossWorldTeleportToEntity(playerStore, playerRef, playerWorld, 
+                                          targetStore, targetRef, targetWorld, 
+                                          null, null);
     }
 
     /**
@@ -258,10 +265,8 @@ public final class TeleportUtil {
             return;
         }
 
-        // Use spawn coordinates directly - no safe Y check as it can trigger chunk loading
-        // during store processing which causes IllegalStateException
+        // Use spawn coordinates directly - no safe Y check
         Vector3d position = new Vector3d(spawn.getX(), spawn.getY(), spawn.getZ());
-        // Round yaw to cardinal direction and zero pitch to avoid Hytale model bug
         Vector3f rotation = new Vector3f(0, roundToCardinalYaw(spawn.getYaw()), 0);
 
         Teleport teleport = new Teleport(targetWorld, position, rotation);
@@ -309,66 +314,9 @@ public final class TeleportUtil {
         EntityStore playerEntityStore = store.getExternalData();
         World playerWorld = playerEntityStore.getWorld();
 
-        // Check if same world
-        if (targetWorld == playerWorld) {
-            // Same world - safe to access directly
-            TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
-            if (targetTransform == null) {
-                if (onError != null) {
-                    onError.accept("Could not get target position.");
-                }
-                return;
-            }
-
-            Vector3d targetPos = targetTransform.getPosition();
-            Vector3f rotation = cardinalRotation(targetTransform.getRotation());
-
-            Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
-            store.putComponent(playerRef, Teleport.getComponentType(), teleport);
-
-            if (onSuccess != null) {
-                onSuccess.run();
-            }
-        } else {
-            // Cross-world teleport - read target position on target world's thread
-            targetWorld.execute(() -> {
-                if (!targetRef.isValid()) {
-                    if (onError != null) {
-                        onError.accept("Target player is not available.");
-                    }
-                    return;
-                }
-
-                TransformComponent targetTransform = targetStore.getComponent(targetRef, TransformComponent.getComponentType());
-                if (targetTransform == null) {
-                    if (onError != null) {
-                        onError.accept("Could not get target position.");
-                    }
-                    return;
-                }
-
-                // Capture position data (clone to prevent mutation)
-                Vector3d targetPos = targetTransform.getPosition().clone();
-                Vector3f rotation = cardinalRotation(targetTransform.getRotation());
-
-                // Execute teleport on player's world thread
-                playerWorld.execute(() -> {
-                    if (!playerRef.isValid()) {
-                        if (onError != null) {
-                            onError.accept("Player is not available.");
-                        }
-                        return;
-                    }
-
-                    Teleport teleport = new Teleport(targetWorld, targetPos, rotation);
-                    store.putComponent(playerRef, Teleport.getComponentType(), teleport);
-
-                    if (onSuccess != null) {
-                        onSuccess.run();
-                    }
-                });
-            });
-        }
+        executeCrossWorldTeleportToEntity(store, playerRef, playerWorld, 
+                                          targetStore, targetRef, targetWorld, 
+                                          onSuccess, onError);
     }
 
     /**
@@ -463,38 +411,7 @@ public final class TeleportUtil {
             return null; // Chunk not loaded
         }
 
-        // Search from top down to find first solid block
-        int startY = 200;
-        int minY = 0;
-        
-        for (int checkY = startY; checkY >= minY; checkY--) {
-            // Check for fluid at this level - if found, abort this location
-            if (hasFluid(chunk, blockX, checkY, blockZ)) {
-                return null; // Hit water/lava, this location is no good
-            }
-            
-            // Check if this block is solid (ground)
-            if (isSolidBlock(chunk, blockX, checkY, blockZ)) {
-                // Found ground! Player spawns at checkY + 1
-                int spawnY = checkY + 1;
-                
-                // Verify there's space for player (2 blocks) and no fluid
-                if (hasFluid(chunk, blockX, spawnY, blockZ) || 
-                    hasFluid(chunk, blockX, spawnY + 1, blockZ)) {
-                    return null; // Fluid above ground
-                }
-                
-                // Make sure head space isn't blocked
-                if (isSolidBlock(chunk, blockX, spawnY + 1, blockZ)) {
-                    // Only 1 block of space, keep searching down
-                    continue;
-                }
-                
-                return (double) spawnY;
-            }
-        }
-
-        return null; // No solid ground found
+        return findSafeRtpYFromChunk(chunk, blockX, blockZ);
     }
 
     /**
@@ -629,6 +546,23 @@ public final class TeleportUtil {
                                                         @Nonnull com.nhulston.essentials.managers.BackManager backManager,
                                                         @Nonnull Spawn spawn) {
         saveBackLocation(targetPlayer, backManager);
-        teleportToSpawn(targetPlayer, spawn);
+        
+        Ref<EntityStore> playerRef = targetPlayer.getReference();
+        if (playerRef == null || !playerRef.isValid()) {
+            return;
+        }
+
+        World targetWorld = Universe.get().getWorld(spawn.getWorld());
+        if (targetWorld == null) {
+            return;
+        }
+
+        double safeY = findSafeY(targetWorld, spawn.getX(), spawn.getY(), spawn.getZ());
+        Store<EntityStore> store = playerRef.getStore();
+        Vector3d position = new Vector3d(spawn.getX(), safeY, spawn.getZ());
+        Vector3f rotation = new Vector3f(0, roundToCardinalYaw(spawn.getYaw()), 0);
+
+        Teleport teleport = new Teleport(targetWorld, position, rotation);
+        store.putComponent(playerRef, Teleport.getComponentType(), teleport);
     }
 }

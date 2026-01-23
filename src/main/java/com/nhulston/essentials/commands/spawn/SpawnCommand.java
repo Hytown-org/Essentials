@@ -105,18 +105,15 @@ public class SpawnCommand extends AbstractPlayerCommand {
             }
 
             PlayerRef targetPlayer = context.get(targetArg);
-            if (targetPlayer == null) {
-                Msg.send(context, messages.get("commands.spawn.player-not-found"));
-                return CompletableFuture.completedFuture(null);
-            }
+            
+            // Execute teleport on player's world thread with validation
+            TeleportUtil.executeOnPlayerWorld(targetPlayer, context, () -> {
+                TeleportUtil.saveLocationAndTeleportToSpawn(targetPlayer, backManager, spawn);
 
-            // Save location and teleport instantly using utility method
-            TeleportUtil.saveLocationAndTeleportToSpawn(targetPlayer, backManager, spawn);
-
-            // Send messages
-            String senderName = "Console"; // Console always for this variant since AbstractCommand
-            Msg.send(context, messages.get("commands.spawn.teleported-other", Map.of("player", targetPlayer.getUsername())));
-            Msg.send(targetPlayer, messages.get("commands.spawn.teleported-by", Map.of("sender", senderName)));
+                String senderName = "Console";
+                Msg.send(context, messages.get("commands.spawn.teleported-other", Map.of("player", targetPlayer.getUsername())));
+                Msg.send(targetPlayer, messages.get("commands.spawn.teleported-by", Map.of("sender", senderName)));
+            });
 
             return CompletableFuture.completedFuture(null);
         }
