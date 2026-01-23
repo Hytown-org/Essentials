@@ -58,7 +58,7 @@ import com.nhulston.essentials.util.VersionChecker;
 import javax.annotation.Nonnull;
 
 public class Essentials extends JavaPlugin {
-    public static final String VERSION = "1.5.3";
+    public static final String VERSION = "1.5.4";
     
     private static Essentials instance;
     
