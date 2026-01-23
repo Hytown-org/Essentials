@@ -4,6 +4,7 @@ Essentials is an all-in-one utility plugin for Hytale server administrators.
 
 # Features
 
+*   All messages customizable!
 *   Homes (multi-home support)
 *   Server warps
 *   Server spawn with protection

@@ -8,6 +8,13 @@
 # Placeholders: Use {player}, {home}, {warp}, {time}, etc. where applicable
 #
 # Leave a message blank ("") to disable it completely
+#
+# You can make any text have multiple lines by doing something like this:
+# join-message = """
+# &aLine 1
+# &bLine 2
+# """
+# See the MOTD section in config.toml for an example.
 
 [commands.home]
 no-homes = "&cYou don't have any homes set. Use /sethome to set one."

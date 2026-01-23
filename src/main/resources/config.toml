@@ -6,6 +6,7 @@
 # E.g. essentials.homes.default will give them 3 homes
 # If a player has multiple tier permissions, they get the highest limit
 # Players without any home permission get the "default" tier limit
+# Permissions are CASE SENSITIVE!
 
 [homes.limits]
 default = 3
@@ -138,6 +139,12 @@ cooldown = 43200
 
 [join-leave-messages]
 # Broadcast messages when players join or leave the server
+# You can make any text have multiple lines by doing something like this:
+# join-message = """
+# &aLine 1
+# &bLine 2
+# """
+# See the MOTD section for an example.
 
 # Join messages
 join-enabled = true
