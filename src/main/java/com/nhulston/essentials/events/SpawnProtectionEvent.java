@@ -43,6 +43,7 @@ public class SpawnProtectionEvent {
      */
     private static boolean shouldCancelBlockEvent(
             @Nonnull SpawnProtectionManager manager,
+            @Nonnull Store<EntityStore> store,
             @Nonnull ArchetypeChunk<EntityStore> chunk,
             int index,
             @Nonnull com.hypixel.hytale.math.vector.Vector3i blockPos) {
@@ -51,7 +52,10 @@ public class SpawnProtectionEvent {
             return false;
         }
 
-        if (!manager.isInProtectedArea(blockPos)) {
+        // Get current world name
+        String worldName = store.getExternalData().getWorld().getName();
+
+        if (!manager.isInProtectedArea(worldName, blockPos)) {
             return false;
         }
 
@@ -105,7 +109,7 @@ public class SpawnProtectionEvent {
                 return;
             }
 
-            if (shouldCancelBlockEvent(manager, chunk, index, event.getTargetBlock())) {
+            if (shouldCancelBlockEvent(manager, store, chunk, index, event.getTargetBlock())) {
                 event.setCancelled(true);
             }
         }
@@ -138,7 +142,7 @@ public class SpawnProtectionEvent {
                 return;
             }
 
-            if (shouldCancelBlockEvent(manager, chunk, index, event.getTargetBlock())) {
+            if (shouldCancelBlockEvent(manager, store, chunk, index, event.getTargetBlock())) {
                 event.setCancelled(true);
             }
         }
@@ -171,7 +175,7 @@ public class SpawnProtectionEvent {
                 return;
             }
 
-            if (shouldCancelBlockEvent(manager, chunk, index, event.getTargetBlock())) {
+            if (shouldCancelBlockEvent(manager, store, chunk, index, event.getTargetBlock())) {
                 event.setCancelled(true);
             }
         }
@@ -217,8 +221,11 @@ public class SpawnProtectionEvent {
                 return;
             }
 
+            // Get current world name
+            String worldName = store.getExternalData().getWorld().getName();
+
             // Check if victim is in protected area
-            if (!manager.isInProtectedArea(victimRef.getTransform().getPosition())) {
+            if (!manager.isInProtectedArea(worldName, victimRef.getTransform().getPosition())) {
                 return;
             }
 
