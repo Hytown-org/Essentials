@@ -25,11 +25,16 @@ public class RulesCommand extends AbstractPlayerCommand {
     }
 
     @Override
+    protected boolean canGeneratePermission() {
+        return false;
+    }
+
+    @Override
     protected void execute(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
                            @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
         String rulesMessage = configManager.getRulesMessage();
         
-        if (rulesMessage == null || rulesMessage.trim().isEmpty()) {
+        if (rulesMessage.trim().isEmpty()) {
             playerRef.sendMessage(ColorUtil.colorize("&cNo rules configured."));
             return;
         }
