@@ -39,6 +39,16 @@ public final class TeleportUtil {
     private static final float YAW_WEST = (float) Math.toRadians(90);   // π/2
 
     /**
+     * Gets player's start position for teleport countdown.
+     * Uses EntityStore to avoid stale cache after world changes.
+     */
+    @Nullable
+    public static Vector3d getStartPosition(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref) {
+        TransformComponent transform = store.getComponent(ref, TransformComponent.getComponentType());
+        return transform != null ? transform.getPosition() : null;
+    }
+
+    /**
      * Helper to perform cross-world teleports with proper thread safety.
      * Handles same-world and cross-world cases automatically.
      * 
@@ -493,14 +503,7 @@ public final class TeleportUtil {
             EntityStore targetEntityStore = targetStore.getExternalData();
             World targetWorld = targetEntityStore.getWorld();
             
-            Vector3d currentPos = targetPlayer.getTransform().getPosition();
-            Vector3f currentRot = targetPlayer.getTransform().getRotation();
-            backManager.setTeleportLocation(
-                targetPlayer.getUuid(), 
-                targetWorld.getName(),
-                currentPos.getX(), currentPos.getY(), currentPos.getZ(),
-                currentRot.getY(), currentRot.getX()
-            );
+            backManager.setBackLocation(targetStore, targetRef, targetPlayer, targetWorld);
         }
     }
 

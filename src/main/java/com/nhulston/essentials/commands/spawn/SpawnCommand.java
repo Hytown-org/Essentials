@@ -3,7 +3,6 @@ package com.nhulston.essentials.commands.spawn;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.server.core.command.system.AbstractCommand;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
@@ -61,14 +60,12 @@ public class SpawnCommand extends AbstractPlayerCommand {
             return;
         }
 
-        // Save current location before teleporting
-        Vector3d currentPos = playerRef.getTransform().getPosition();
-        Vector3f currentRot = playerRef.getTransform().getRotation();
-        backManager.setTeleportLocation(playerRef.getUuid(), world.getName(),
-            currentPos.getX(), currentPos.getY(), currentPos.getZ(),
-            currentRot.getY(), currentRot.getX());
-
-        Vector3d startPosition = playerRef.getTransform().getPosition();
+        backManager.setBackLocation(store, ref, playerRef, world);
+        Vector3d startPosition = TeleportUtil.getStartPosition(store, ref);
+        if (startPosition == null) {
+            Msg.send(context, messages.get("errors.generic"));
+            return;
+        }
 
         teleportManager.queueTeleport(
             playerRef, ref, store, startPosition,

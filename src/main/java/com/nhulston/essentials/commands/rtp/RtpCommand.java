@@ -3,7 +3,6 @@ package com.nhulston.essentials.commands.rtp;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
@@ -103,17 +102,16 @@ public class RtpCommand extends AbstractPlayerCommand {
 
         boolean isCrossWorld = !rtpWorldName.equals(currentWorldName);
         
-        // Save current location before teleporting
-        Vector3d currentPos = playerRef.getTransform().getPosition();
-        Vector3f currentRot = playerRef.getTransform().getRotation();
-        backManager.setTeleportLocation(playerUuid, currentWorldName,
-            currentPos.getX(), currentPos.getY(), currentPos.getZ(),
-            currentRot.getY(), currentRot.getX());
+        backManager.setBackLocation(store, ref, playerRef, world);
+        Vector3d startPos = TeleportUtil.getStartPosition(store, ref);
+        if (startPos == null) {
+            Msg.send(context, messages.get("errors.generic"));
+            return;
+        }
 
         if (isCrossWorld) {
             // Cross-world RTP - use async chunk loading
-            // Capture start position now, on the correct thread
-            Vector3d startPosition = playerRef.getTransform().getPosition().clone();
+            final Vector3d startPosition = startPos.clone();
 
             findSafeLocationAsync(rtpWorld, radius, 0)
                 .thenAccept(result -> {
@@ -161,7 +159,11 @@ public class RtpCommand extends AbstractPlayerCommand {
             Double safeY = TeleportUtil.findSafeRtpY(rtpWorld, x, z);
             
             if (safeY != null) {
-                Vector3d startPosition = playerRef.getTransform().getPosition();
+                Vector3d startPosition = TeleportUtil.getStartPosition(store, ref);
+                if (startPosition == null) {
+                    Msg.send(playerRef, messages.get("errors.generic"));
+                    return;
+                }
 
                 teleportManager.queueTeleport(
                     playerRef, ref, store, startPosition,

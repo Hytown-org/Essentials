@@ -3,7 +3,6 @@ package com.nhulston.essentials.commands.back;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -14,6 +13,7 @@ import com.nhulston.essentials.managers.BackManager;
 import com.nhulston.essentials.managers.TeleportManager;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
+import com.nhulston.essentials.util.TeleportUtil;
 
 import javax.annotation.Nonnull;
 
@@ -46,14 +46,12 @@ public class BackCommand extends AbstractPlayerCommand {
             return;
         }
 
-        // Save current location before teleporting
-        Vector3d currentPos = playerRef.getTransform().getPosition();
-        Vector3f currentRot = playerRef.getTransform().getRotation();
-        backManager.setTeleportLocation(playerUuid, world.getName(),
-            currentPos.getX(), currentPos.getY(), currentPos.getZ(),
-            currentRot.getY(), currentRot.getX());
-
-        Vector3d startPosition = playerRef.getTransform().getPosition();
+        backManager.setBackLocation(store, ref, playerRef, world);
+        Vector3d startPosition = TeleportUtil.getStartPosition(store, ref);
+        if (startPosition == null) {
+            Msg.send(context, messages.get("errors.generic"));
+            return;
+        }
 
         teleportManager.queueTeleport(
             playerRef, ref, store, startPosition,

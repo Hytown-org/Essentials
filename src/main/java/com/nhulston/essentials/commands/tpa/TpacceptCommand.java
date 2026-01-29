@@ -3,7 +3,6 @@ package com.nhulston.essentials.commands.tpa;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -18,6 +17,7 @@ import com.nhulston.essentials.managers.TeleportManager;
 import com.nhulston.essentials.managers.TpaManager;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
+import com.nhulston.essentials.util.TeleportUtil;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -83,28 +83,9 @@ public class TpacceptCommand extends AbstractPlayerCommand {
         Msg.send(context, messages.get("commands.tpaccept.accepted", Map.of("player", requesterName)));
 
         // Save requester's location and queue teleport (must be on their world thread)
-        requesterWorld.execute(() -> {
-            if (!requesterRef.isValid()) {
-                return;
-            }
-            
-            Vector3d currentPos = requester.getTransform().getPosition();
-            Vector3f currentRot = requester.getTransform().getRotation();
-            backManager.setTeleportLocation(requester.getUuid(), requesterWorld.getName(),
-                currentPos.getX(), currentPos.getY(), currentPos.getZ(),
-                currentRot.getY(), currentRot.getX());
-
-            // Queue the teleport (startPosition must be captured on requester's world thread)
-            Vector3d startPosition = currentPos.clone();
-            
-            teleportManager.queueTeleportToPlayer(
-                requester, requesterRef, requesterStore, startPosition,
-                playerRef,  // target player
-                messages.get("commands.tpaccept.teleported", Map.of("player", playerRef.getUsername()))
-            );
-        });
+        executeTeleport(playerRef, requester, requesterRef, requesterStore, requesterWorld, backManager, messages, teleportManager);
     }
-    
+
     /**
      * Usage variant for /tpaccept <player>
      */
@@ -159,26 +140,7 @@ public class TpacceptCommand extends AbstractPlayerCommand {
             Msg.send(context, messages.get("commands.tpaccept.accepted", Map.of("player", requester.getUsername())));
 
             // Save requester's location and queue teleport (must be on their world thread)
-            requesterWorld.execute(() -> {
-                if (!requesterRef.isValid()) {
-                    return;
-                }
-                
-                Vector3d currentPos = requester.getTransform().getPosition();
-                Vector3f currentRot = requester.getTransform().getRotation();
-                backManager.setTeleportLocation(requester.getUuid(), requesterWorld.getName(),
-                    currentPos.getX(), currentPos.getY(), currentPos.getZ(),
-                    currentRot.getY(), currentRot.getX());
-
-                // Queue the teleport (startPosition must be captured on requester's world thread)
-                Vector3d startPosition = currentPos.clone();
-                
-                teleportManager.queueTeleportToPlayer(
-                    requester, requesterRef, requesterStore, startPosition,
-                    playerRef,  // target player
-                    messages.get("commands.tpaccept.teleported", Map.of("player", playerRef.getUsername()))
-                );
-            });
+            executeTeleport(playerRef, requester, requesterRef, requesterStore, requesterWorld, backManager, messages, teleportManager);
         }
         
         /**
@@ -193,5 +155,26 @@ public class TpacceptCommand extends AbstractPlayerCommand {
             }
             return null;
         }
+    }
+
+    private static void executeTeleport(@Nonnull PlayerRef playerRef, PlayerRef requester, Ref<EntityStore> requesterRef, Store<EntityStore> requesterStore, World requesterWorld, BackManager backManager, MessageManager messages, TeleportManager teleportManager) {
+        requesterWorld.execute(() -> {
+            if (!requesterRef.isValid()) {
+                return;
+            }
+
+            backManager.setBackLocation(requesterStore, requesterRef, requester, requesterWorld);
+            Vector3d startPosition = TeleportUtil.getStartPosition(requesterStore, requesterRef);
+            if (startPosition == null) {
+                Msg.send(requester, messages.get("errors.generic"));
+                return;
+            }
+
+            teleportManager.queueTeleportToPlayer(
+                    requester, requesterRef, requesterStore, startPosition,
+                    playerRef,  // target player
+                    messages.get("commands.tpaccept.teleported", Map.of("player", playerRef.getUsername()))
+            );
+        });
     }
 }

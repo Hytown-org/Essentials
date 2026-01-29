@@ -1,5 +1,14 @@
 package com.nhulston.essentials.managers;
 
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.math.vector.Vector3f;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -14,48 +23,19 @@ public class BackManager {
     private final ConcurrentHashMap<UUID, BackLocation> backLocations = new ConcurrentHashMap<>();
 
     /**
-     * Type of back location.
+     * Records a player's back location (death or teleport).
+     * Gets position from EntityStore to avoid stale cache after world changes.
+     * Always overwrites - most recent location is saved.
      */
-    public enum BackLocationType {
-        DEATH,      // Player died here
-        TELEPORT    // Player teleported from here
-    }
-
-    /**
-     * Records a player's back location with a specific type.
-     * DEATH type takes priority - won't be overwritten by TELEPORT until used.
-     */
-    public void setBackLocation(@Nonnull UUID playerUuid, @Nonnull String worldName,
-                                double x, double y, double z, float yaw, float pitch,
-                                @Nonnull BackLocationType type) {
-        // Use compute for atomic check-and-update
-        backLocations.compute(playerUuid, (_, existing) -> {
-            // If existing location is DEATH and new is TELEPORT, don't overwrite
-            if (existing != null && existing.getType() == BackLocationType.DEATH 
-                && type == BackLocationType.TELEPORT) {
-                return existing;
-            }
-            return new BackLocation(worldName, x, y, z, yaw, pitch, type);
-        });
-    }
-
-    /**
-     * Records a player's death location.
-     * Wrapper for setBackLocation with DEATH type.
-     */
-    public void setDeathLocation(@Nonnull UUID playerUuid, @Nonnull String worldName,
-                                  double x, double y, double z, float yaw, float pitch) {
-        setBackLocation(playerUuid, worldName, x, y, z, yaw, pitch, BackLocationType.DEATH);
-    }
-
-    /**
-     * Records a player's pre-teleport location.
-     * Wrapper for setBackLocation with TELEPORT type.
-     * Won't overwrite death locations.
-     */
-    public void setTeleportLocation(@Nonnull UUID playerUuid, @Nonnull String worldName,
-                                     double x, double y, double z, float yaw, float pitch) {
-        setBackLocation(playerUuid, worldName, x, y, z, yaw, pitch, BackLocationType.TELEPORT);
+    public void setBackLocation(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref,
+                                @Nonnull PlayerRef playerRef, @Nonnull World world) {
+        TransformComponent transform = store.getComponent(ref, TransformComponent.getComponentType());
+        if (transform == null) return;
+        
+        Vector3d pos = transform.getPosition();
+        Vector3f rot = transform.getRotation();
+        backLocations.put(playerRef.getUuid(), 
+            new BackLocation(world.getName(), pos.getX(), pos.getY(), pos.getZ(), rot.getY(), rot.getX()));
     }
 
     /**
@@ -88,16 +68,14 @@ public class BackManager {
         private final String worldName;
         private final double x, y, z;
         private final float yaw, pitch;
-        private final BackLocationType type;
 
-        BackLocation(String worldName, double x, double y, double z, float yaw, float pitch, BackLocationType type) {
+        BackLocation(String worldName, double x, double y, double z, float yaw, float pitch) {
             this.worldName = worldName;
             this.x = x;
             this.y = y;
             this.z = z;
             this.yaw = yaw;
             this.pitch = pitch;
-            this.type = type;
         }
 
         public String getWorldName() {
@@ -122,10 +100,6 @@ public class BackManager {
 
         public float getPitch() {
             return pitch;
-        }
-        
-        BackLocationType getType() {
-            return type;
         }
     }
 }
