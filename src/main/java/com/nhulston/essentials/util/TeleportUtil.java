@@ -8,7 +8,9 @@ import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
 import com.hypixel.hytale.protocol.BlockMaterial;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
+import com.hypixel.hytale.server.core.modules.entity.teleport.PendingTeleport;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
@@ -17,6 +19,7 @@ import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import com.nhulston.essentials.Essentials;
+import com.nhulston.essentials.managers.BackManager;
 import com.nhulston.essentials.models.Spawn;
 
 import javax.annotation.Nonnull;
@@ -142,8 +145,8 @@ public final class TeleportUtil {
      * @param action The action to execute on the player's world thread
      */
     public static void executeOnPlayerWorld(@Nullable PlayerRef targetPlayer,
-                                             @Nonnull com.hypixel.hytale.server.core.command.system.CommandContext context,
-                                             @Nonnull Runnable action) {
+                                            @Nonnull CommandContext context,
+                                            @Nonnull Runnable action) {
         if (targetPlayer == null) {
             Msg.send(context, Essentials.getInstance().getMessageManager().get("commands.spawn.player-not-found"));
             return;
@@ -214,9 +217,17 @@ public final class TeleportUtil {
             return messages.get("teleport.world-not-loaded", Map.of("world", worldName));
         }
         double safeY = findSafeY(targetWorld, x, y, z);
-        
+
         Vector3d position = new Vector3d(x, safeY, z);
         Vector3f rotation = new Vector3f(0, roundToCardinalYaw(yaw), 0);
+
+        // CRITICAL FIX: Remove PendingTeleport component to reset teleportId counter
+        // After death/respawn, the PendingTeleport component persists with stale teleportId state
+        // This causes "Incorrect teleportId" kicks when the client's expected ID doesn't match
+        PendingTeleport existingPending = store.getComponent(ref, PendingTeleport.getComponentType());
+        if (existingPending != null) {
+            store.removeComponent(ref, PendingTeleport.getComponentType());
+        }
 
         Teleport teleport = new Teleport(targetWorld, position, rotation);
         store.putComponent(ref, Teleport.getComponentType(), teleport);
@@ -546,10 +557,10 @@ public final class TeleportUtil {
      * @param spawn The spawn location
      */
     public static void saveLocationAndTeleportToSpawn(@Nonnull PlayerRef targetPlayer,
-                                                        @Nonnull com.nhulston.essentials.managers.BackManager backManager,
+                                                        @Nonnull BackManager backManager,
                                                         @Nonnull Spawn spawn) {
         saveBackLocation(targetPlayer, backManager);
-        
+
         Ref<EntityStore> playerRef = targetPlayer.getReference();
         if (playerRef == null || !playerRef.isValid()) {
             return;
