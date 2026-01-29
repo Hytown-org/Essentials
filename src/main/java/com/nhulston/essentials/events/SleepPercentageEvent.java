@@ -44,7 +44,7 @@ public class SleepPercentageEvent {
      */
     private static class SleepTrackingSystem extends RefChangeSystem<EntityStore, PlayerSomnolence> {
         private static final double MORNING_TIME = 0.25; // ~5:00 AM
-        private static final double NIGHT_START = 0.875; // 9:00 PM
+        private static final double NIGHT_START = 0.8125; // 7:30 PM
         private static final double NIGHT_END = 0.25; // ~6:00 AM
 
         private final ConfigManager config;
