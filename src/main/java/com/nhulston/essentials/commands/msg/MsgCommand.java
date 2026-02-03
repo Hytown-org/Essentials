@@ -96,7 +96,7 @@ public class MsgCommand extends AbstractPlayerCommand {
         lastMessagePartner.put(sender.getUuid(), target.getUuid());
         lastMessagePartner.put(target.getUuid(), sender.getUuid());
 
-        // Notify socialspy users
+        // Notify socialspy users (excluding sender and target)
         Set<UUID> spyPlayers = SocialSpyCommand.getSocialSpyPlayers();
         if (!spyPlayers.isEmpty()) {
             String spyMessage = messages.get("commands.socialspy.format", Map.of(
@@ -106,6 +106,11 @@ public class MsgCommand extends AbstractPlayerCommand {
             ));
 
             for (UUID spyUuid : spyPlayers) {
+                // Skip sender and target - they already see the message
+                if (spyUuid.equals(sender.getUuid()) || spyUuid.equals(target.getUuid())) {
+                    continue;
+                }
+
                 PlayerRef spy = Universe.get().getPlayer(spyUuid);
                 if (spy != null) {
                     Msg.send(spy, spyMessage);
