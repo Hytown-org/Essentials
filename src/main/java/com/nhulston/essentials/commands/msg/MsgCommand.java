@@ -9,6 +9,7 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.Essentials;
+import com.nhulston.essentials.commands.socialspy.SocialSpyCommand;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
 
@@ -16,6 +17,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -93,6 +95,23 @@ public class MsgCommand extends AbstractPlayerCommand {
         // Track last message partner for both players (for /reply)
         lastMessagePartner.put(sender.getUuid(), target.getUuid());
         lastMessagePartner.put(target.getUuid(), sender.getUuid());
+
+        // Notify socialspy users
+        Set<UUID> spyPlayers = SocialSpyCommand.getSocialSpyPlayers();
+        if (!spyPlayers.isEmpty()) {
+            String spyMessage = messages.get("commands.socialspy.format", Map.of(
+                "sender", sender.getUsername(),
+                "target", target.getUsername(),
+                "message", message
+            ));
+
+            for (UUID spyUuid : spyPlayers) {
+                PlayerRef spy = Universe.get().getPlayer(spyUuid);
+                if (spy != null) {
+                    Msg.send(spy, spyMessage);
+                }
+            }
+        }
     }
 
     /**

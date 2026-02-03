@@ -134,6 +134,11 @@ usage = "&cUsage: /r <message>"
 no-one = "&cYou have no one to reply to."
 player-offline = "&cThat player is no longer online."
 
+[commands.socialspy]
+enabled = "&aSocialSpy enabled. You will now see all private messages."
+disabled = "&cSocialSpy disabled."
+format = "&7[SocialSpy] {sender} -> {target}: {message}"
+
 [commands.shout]
 usage = "&cUsage: /shout <message>"
 
