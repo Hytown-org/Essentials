@@ -66,6 +66,10 @@ public class ConfigManager {
     private volatile String rtpDefaultWorld = "default";
     private final ConcurrentHashMap<String, Integer> rtpWorlds = new ConcurrentHashMap<>();
 
+    // AFK settings
+    private long afkKickTime = 0L;
+    private String afkKickMessage = "You have been kicked for idling more than %period% seconds!";
+
     // MOTD settings
     private volatile boolean motdEnabled = true;
     private volatile String motdMessage = "&6Welcome to the server, &e%player%&6!";
@@ -195,6 +199,10 @@ public class ConfigManager {
 
             String defaultWorld = config.getString("rtp.default-world");
             rtpDefaultWorld = defaultWorld != null ? defaultWorld : "default";
+
+            afkKickTime = getIntSafe(config, "afk.threshold", 0);
+            afkKickMessage = config.getString("afk.kick-message", () -> "You have been kicked for idling more than %period% seconds!")
+                    .replace("%period%", String.valueOf(afkKickTime));
 
             // MOTD config
             motdEnabled = config.getBoolean("motd.enabled", () -> true);
@@ -366,6 +374,18 @@ public class ConfigManager {
     @Nullable
     public Integer getRtpRadius(@Nonnull String worldName) {
         return rtpWorlds.get(worldName);
+    }
+
+    public boolean isAfkKickEnabled() {
+        return afkKickTime > 0;
+    }
+
+    public Long getAfkKickTime() {
+        return afkKickTime;
+    }
+
+    public String getAfkKickMessage() {
+        return afkKickMessage;
     }
 
     public boolean isMotdEnabled() {

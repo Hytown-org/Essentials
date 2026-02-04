@@ -87,5 +87,4 @@ public class PlayerData {
     public void setLastRtpTime(long timestamp) {
         this.lastRtpTime = timestamp;
     }
-
 }

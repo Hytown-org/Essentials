@@ -3,6 +3,7 @@ package com.nhulston.essentials;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.events.AllWorldsLoadedEvent;
+import com.nhulston.essentials.afk.AfkSystem;
 import com.nhulston.essentials.commands.back.BackCommand;
 import com.nhulston.essentials.commands.essentials.EssentialsCommand;
 import com.nhulston.essentials.commands.freecam.FreecamCommand;
@@ -109,6 +110,8 @@ public class Essentials extends JavaPlugin {
     protected void start() {
         registerCommands();
         registerEvents();
+
+        registerAfkSystem();
         
         // Check for updates asynchronously
         versionChecker.checkForUpdatesAsync();
@@ -198,10 +201,10 @@ public class Essentials extends JavaPlugin {
 
         // Repair command
         getCommandRegistry().registerCommand(new RepairCommand(configManager, storageManager));
-        
+
         // Rules command
         getCommandRegistry().registerCommand(new RulesCommand(configManager));
-        
+
         // Trash command
         getCommandRegistry().registerCommand(new TrashCommand());
     }
@@ -262,6 +265,16 @@ public class Essentials extends JavaPlugin {
         kitManager.reload();
         Log.info("All configurations reloaded.");
     }
+
+    private void registerAfkSystem() {
+        if (configManager.isAfkKickEnabled()) {
+            AfkSystem afkSystem = new AfkSystem(configManager);
+            AfkSystem.registerComponents(getEntityStoreRegistry());
+            afkSystem.registerEvents(getEventRegistry());
+            afkSystem.registerSystems(getEntityStoreRegistry());
+        }
+    }
+
 
     /**
      * Gets the message manager.
