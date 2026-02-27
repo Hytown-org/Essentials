@@ -11,5 +11,8 @@
   "Website": "https://github.com/nhulston/essentials",
   "Main": "com.nhulston.essentials.Essentials",
   "ServerVersion": "*",
+  "Dependencies": {
+    "org.hytown:HyTownGUI": "*"
+  },
   "IncludesAssetPack": true
 }

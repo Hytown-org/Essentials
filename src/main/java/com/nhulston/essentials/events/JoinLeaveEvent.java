@@ -6,6 +6,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.nhulston.essentials.managers.HomeManager;
 import com.nhulston.essentials.util.ColorUtil;
 import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.Log;
@@ -20,11 +21,14 @@ import javax.annotation.Nonnull;
 public class JoinLeaveEvent {
     private final ConfigManager configManager;
     private final StorageManager storageManager;
+    private final HomeManager homeManager;
 
     public JoinLeaveEvent(@Nonnull ConfigManager configManager,
-                          @Nonnull StorageManager storageManager) {
+                          @Nonnull StorageManager storageManager,
+                          @Nonnull HomeManager homeManager) {
         this.configManager = configManager;
         this.storageManager = storageManager;
+        this.homeManager = homeManager;
     }
 
     public void register(@Nonnull EventRegistry eventRegistry) {
@@ -40,7 +44,10 @@ public class JoinLeaveEvent {
             
             // Register username -> UUID mapping for offline player lookups
             storageManager.registerPlayer(playerName, playerRef.getUuid());
-            
+
+            // Push player home names to HytownGUI's MenuDataRegistry
+            homeManager.pushHomes(playerRef.getUuid());
+
             if (!configManager.isJoinMessageEnabled()) {
                 return;
             }

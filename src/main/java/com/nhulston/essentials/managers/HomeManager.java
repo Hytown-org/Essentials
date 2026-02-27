@@ -8,6 +8,8 @@ import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.StorageManager;
 
+import org.hytown.hytowngui.ui.MenuDataRegistry;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -94,6 +96,7 @@ public class HomeManager {
         Home home = new Home(world, x, y, z, yaw, pitch, System.currentTimeMillis());
         data.setHome(lowerName, home);
         storageManager.savePlayerData(playerUuid);
+        pushHomes(playerUuid);
 
         return null;
     }
@@ -115,6 +118,17 @@ public class HomeManager {
         }
         data.deleteHome(name);
         storageManager.savePlayerData(playerUuid);
+        pushHomes(playerUuid);
         return true;
+    }
+
+    /**
+     * Pushes the current home names for this player into HytownGUI's MenuDataRegistry
+     * so the Teleports page can display them. Called after setHome/deleteHome and on connect.
+     */
+    public void pushHomes(@Nonnull UUID playerUuid) {
+        Map<String, Home> homes = getHomes(playerUuid);
+        String csv = homes.isEmpty() ? "" : String.join(",", homes.keySet().stream().sorted().toList());
+        MenuDataRegistry.set(playerUuid, MenuDataRegistry.KEY_HOMES, csv);
     }
 }

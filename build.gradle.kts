@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
     compileOnly("com.hypixel.hytale:Server:latest.release")
+    compileOnly(fileTree("../HytownGUI/build/libs") { include("HyTownGUI-*.jar") })
 
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")

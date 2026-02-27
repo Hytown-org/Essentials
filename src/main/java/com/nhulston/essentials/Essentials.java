@@ -226,8 +226,8 @@ public class Essentials extends JavaPlugin {
         // MOTD on join
         new MotdEvent(configManager).register(getEventRegistry());
 
-        // Join/leave broadcast messages
-        new JoinLeaveEvent(configManager, storageManager).register(getEventRegistry());
+        // Join/leave broadcast messages + push home data to HytownGUI
+        new JoinLeaveEvent(configManager, storageManager, homeManager).register(getEventRegistry());
 
         // Update notification for admins
         new UpdateNotifyEvent(versionChecker, configManager).register(getEventRegistry());
