@@ -11,6 +11,7 @@ import com.hypixel.hytale.server.core.event.events.ecs.BreakBlockEvent;
 import com.hypixel.hytale.server.core.event.events.ecs.DamageBlockEvent;
 import com.hypixel.hytale.server.core.event.events.ecs.PlaceBlockEvent;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.util.ConfigManager;
@@ -61,7 +62,7 @@ public class BuildProtectionEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override
@@ -98,7 +99,7 @@ public class BuildProtectionEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override
@@ -135,7 +136,7 @@ public class BuildProtectionEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override

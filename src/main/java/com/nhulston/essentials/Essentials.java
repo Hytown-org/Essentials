@@ -96,7 +96,7 @@ public class Essentials extends JavaPlugin {
 
         homeManager = new HomeManager(storageManager, configManager);
         warpManager = new WarpManager(storageManager);
-        spawnManager = new SpawnManager(storageManager);
+        spawnManager = new SpawnManager(storageManager, configManager);
         chatManager = new ChatManager(configManager);
         spawnProtectionManager = new SpawnProtectionManager(configManager, storageManager);
         tpaManager = new TpaManager(configManager);

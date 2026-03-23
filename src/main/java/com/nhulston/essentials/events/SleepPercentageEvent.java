@@ -2,6 +2,7 @@ package com.nhulston.essentials.events;
 
 import com.hypixel.hytale.builtin.beds.sleep.components.PlayerSleep;
 import com.hypixel.hytale.builtin.beds.sleep.components.PlayerSomnolence;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.ComponentRegistryProxy;
 import com.hypixel.hytale.component.ComponentType;
@@ -64,7 +65,7 @@ public class SleepPercentageEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override

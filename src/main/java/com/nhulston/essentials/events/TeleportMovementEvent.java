@@ -8,6 +8,7 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.math.vector.Vector3d;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.managers.TeleportManager;
@@ -41,7 +42,7 @@ public class TeleportMovementEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override

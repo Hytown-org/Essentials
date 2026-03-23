@@ -14,6 +14,7 @@ import com.hypixel.hytale.server.core.event.events.ecs.PlaceBlockEvent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageModule;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.nhulston.essentials.managers.SpawnProtectionManager;
@@ -97,7 +98,7 @@ public class SpawnProtectionEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override
@@ -130,7 +131,7 @@ public class SpawnProtectionEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override
@@ -163,7 +164,7 @@ public class SpawnProtectionEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override
@@ -202,7 +203,7 @@ public class SpawnProtectionEvent {
 
         @Override
         public Query<EntityStore> getQuery() {
-            return Query.any();
+            return Player.getComponentType();
         }
 
         @Override
