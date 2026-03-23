@@ -42,6 +42,7 @@ public class ConfigManager {
     private volatile boolean firstJoinSpawnEnabled = true;
     private volatile boolean everyJoinSpawnEnabled = false;
     private volatile boolean deathSpawnEnabled = true;
+    private volatile boolean syncSpawnProviderEnabled = true;
 
     // Teleport settings
     private volatile int teleportDelay = DEFAULT_TELEPORT_DELAY;
@@ -164,6 +165,15 @@ public class ConfigManager {
             firstJoinSpawnEnabled = config.getBoolean("spawn.first-join", () -> true);
             everyJoinSpawnEnabled = config.getBoolean("spawn.every-join", () -> false);
             deathSpawnEnabled = config.getBoolean("spawn.death-spawn", () -> true);
+            
+            // sync-spawn-provider: true = sync (skip custom providers), "force" = always override, false = never sync
+            String syncValue = config.getString("spawn.sync-spawn-provider");
+            if (syncValue != null) {
+                syncSpawnProviderEnabled = syncValue.equalsIgnoreCase("true") || syncValue.equalsIgnoreCase("force");
+            } else {
+                // Also support boolean true/false in TOML
+                syncSpawnProviderEnabled = config.getBoolean("spawn.sync-spawn-provider", () -> true);
+            }
 
             // Teleport config
             teleportDelay = getIntSafe(config, "teleport.delay", DEFAULT_TELEPORT_DELAY);
@@ -305,6 +315,10 @@ public class ConfigManager {
 
     public boolean isDeathSpawnEnabled() {
         return deathSpawnEnabled;
+    }
+
+    public boolean isSyncSpawnProviderEnabled() {
+        return syncSpawnProviderEnabled;
     }
 
     public int getTeleportDelay() {

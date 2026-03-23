@@ -64,6 +64,12 @@ every-join = false
 # Teleport players to spawn on death
 death-spawn = true
 
+# Sync the Essentials spawn with the world's native spawn provider (updates map marker)
+# Set to true to sync (will skip worlds with custom spawn providers like IndividualSpawnProvider)
+# Set to false to never sync (use this if you manage spawn providers yourself)
+# If you use a custom ISpawnProvider or PlayerStorageProvider, set this to false
+sync-spawn-provider = true
+
 [spawn-protection]
 # This section requires a spawn to be set with /setspawn
 
