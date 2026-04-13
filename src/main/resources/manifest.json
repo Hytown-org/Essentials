@@ -12,7 +12,7 @@
   "Main": "com.nhulston.essentials.Essentials",
   "ServerVersion": "*",
   "Dependencies": {
-    "org.hytown:HyTownGUI": "*"
+    "Hytown:Gui": "*"
   },
   "IncludesAssetPack": true
 }
