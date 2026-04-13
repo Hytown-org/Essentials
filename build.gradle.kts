@@ -12,6 +12,15 @@ repositories {
     mavenCentral()
 
     maven("https://maven.hytale.com/release/") { name = "hytale-release" }
+
+    maven {
+        url = uri("https://pkgs.dev.azure.com/potionlabs/_packaging/potionlabs/maven/v1")
+        name = "potionlabs"
+        credentials(PasswordCredentials::class)
+        authentication {
+            create<BasicAuthentication>("basic")
+        }
+    }
 }
 
 dependencies {
