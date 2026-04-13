@@ -66,7 +66,7 @@ public class JoinLeaveEvent {
             message = message.replace("%player%", playerName);
 
             // Broadcast to all players
-            Universe.get().sendMessage(ColorUtil.colorize(message));
+            // Universe.get().sendMessage(ColorUtil.colorize(message));
         });
 
         // Leave messages - PlayerDisconnectEvent fires when player disconnects
@@ -83,7 +83,7 @@ public class JoinLeaveEvent {
             message = message.replace("%player%", playerName);
 
             // Broadcast to all remaining players (thread-safe)
-            Universe.get().sendMessage(ColorUtil.colorize(message));
+            // Universe.get().sendMessage(ColorUtil.colorize(message));
         });
 
         Log.info("Join/leave message broadcasts registered.");

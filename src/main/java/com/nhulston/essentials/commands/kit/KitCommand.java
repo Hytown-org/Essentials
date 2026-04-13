@@ -22,6 +22,7 @@ import com.nhulston.essentials.util.CooldownUtil;
 import com.nhulston.essentials.util.Log;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
+import com.nhulston.essentials.util.PlayerInventorySync;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -167,7 +168,7 @@ public class KitCommand extends AbstractPlayerCommand {
             }
             
             KitManager.applyKit(kit, inventory, ref, store);
-            player.sendInventory();
+            PlayerInventorySync.syncInventoryToClient(ref, store);
 
             onSuccess.run();
         });

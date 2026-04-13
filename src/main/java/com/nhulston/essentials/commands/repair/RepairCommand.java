@@ -18,6 +18,7 @@ import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.CooldownUtil;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
+import com.nhulston.essentials.util.PlayerInventorySync;
 import com.nhulston.essentials.util.SoundUtil;
 import com.nhulston.essentials.util.StorageManager;
 
@@ -109,7 +110,7 @@ public class RepairCommand extends AbstractPlayerCommand {
         hotbar.setItemStackForSlot(activeSlot, repairedItem);
 
         // Sync inventory to client
-        player.sendInventory();
+        PlayerInventorySync.syncInventoryToClient(ref, store);
 
         SoundUtil.playSound(playerRef, "SFX_Item_Repair");
         Msg.send(context, messages.get("commands.repair.success"));

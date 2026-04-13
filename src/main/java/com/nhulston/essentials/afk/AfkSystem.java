@@ -9,6 +9,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
@@ -130,7 +131,7 @@ public class AfkSystem {
 
             // Use commandBuffer to defer disconnect until after tick completes
             // (cannot modify store while it's processing)
-            commandBuffer.run(_ -> playerRef.getPacketHandler().disconnect(configManager.getAfkKickMessage()));
+            commandBuffer.run(_ -> playerRef.getPacketHandler().disconnect(Message.raw(configManager.getAfkKickMessage())));
         }
 
         @Override

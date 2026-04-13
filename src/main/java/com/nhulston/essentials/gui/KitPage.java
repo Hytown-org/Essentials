@@ -29,6 +29,7 @@ import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.CooldownUtil;
 import com.nhulston.essentials.util.MessageManager;
 import com.nhulston.essentials.util.Msg;
+import com.nhulston.essentials.util.PlayerInventorySync;
 
 /**
  * A GUI page for selecting kits.
@@ -180,7 +181,7 @@ public class KitPage extends InteractiveCustomUIPage<KitPage.KitPageData> {
         KitManager.applyKit(kit, inventory, ref, store);
 
         // Sync inventory changes to client
-        player.sendInventory();
+        PlayerInventorySync.syncInventoryToClient(ref, store);
 
         // Set cooldown
         if (kit.getCooldown() > 0) {

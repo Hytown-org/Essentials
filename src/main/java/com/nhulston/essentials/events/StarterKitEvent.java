@@ -15,6 +15,7 @@ import com.nhulston.essentials.managers.KitManager;
 import com.nhulston.essentials.models.Kit;
 import com.nhulston.essentials.util.ConfigManager;
 import com.nhulston.essentials.util.Log;
+import com.nhulston.essentials.util.PlayerInventorySync;
 import com.nhulston.essentials.util.StorageManager;
 
 import javax.annotation.Nonnull;
@@ -124,7 +125,7 @@ public class StarterKitEvent {
                 }
 
                 KitManager.applyKit(kit, inventory, ref, store);
-                player.sendInventory();
+                PlayerInventorySync.syncInventoryToClient(ref, store);
 
                 Log.info("Gave starter kit '" + kit.getId() + "' to new player " + playerRef.getUsername());
             });

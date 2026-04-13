@@ -11,12 +11,12 @@ repositories {
     mavenLocal()
     mavenCentral()
 
-    maven("https://maven.hytale.com/release/")
+    maven("https://maven.hytale.com/release/") { name = "hytale-release" }
 }
 
 dependencies {
-    compileOnly("com.hypixel.hytale:Server:latest.release")
-    compileOnly(fileTree("../HytownGUI/build/libs") { include("HyTownGUI-*.jar") })
+    compileOnly("com.hypixel.hytale:Server:+")
+    compileOnly("org.hytown:HytownGUI:+")
 
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")
